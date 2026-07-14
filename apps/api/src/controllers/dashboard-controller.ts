@@ -12,10 +12,26 @@ export const dashboard = async (req: Request, res: Response) => {
     .sort({ updatedAt: -1 })
     .limit(6);
   const projectIds = projects.map((project) => project.id);
-  const completedByProject = await Promise.all(
-    projects.map((project) => TaskModel.countDocuments({ project: project.id, status: 'done' })),
-  );
-  const [assignedTasks, activity] = await Promise.all([
+  // const completedByProject = await Promise.all(
+  //   projects.map((project) => TaskModel.countDocuments({ project: project.id, status: 'done' })),
+  // );
+
+  // const [assignedTasks, activity] = await Promise.all([
+  //   TaskModel.find({ assignee: userId, status: { $ne: 'done' } })
+  //     .populate('project', 'name key')
+  //     .sort({ dueDate: 1 })
+  //     .limit(8),
+  //   ActivityLogModel.find({ project: { $in: projectIds } })
+  //     .populate('actor', 'name avatarUrl')
+  //     .populate('project', 'name key')
+  //     .sort({ createdAt: -1 })
+  //     .limit(10),
+  // ]);
+  const [completedCounts, assignedTasks, activity] = await Promise.all([
+    TaskModel.aggregate<{ _id: string; count: number }>([
+      { $match: { project: { $in: projectIds }, status: 'done' } },
+      { $group: { _id: '$project', count: { $sum: 1 } } },
+    ]),
     TaskModel.find({ assignee: userId, status: { $ne: 'done' } })
       .populate('project', 'name key')
       .sort({ dueDate: 1 })
@@ -30,7 +46,7 @@ export const dashboard = async (req: Request, res: Response) => {
     statistics: {
       projects: projects.length,
       assignedTasks: assignedTasks.length,
-      completedTasks: completedByProject.reduce((total, count) => total + count, 0),
+      completedTasks: completedCounts.reduce((total, entry) => total + entry.count, 0),
     },
     projects,
     assignedTasks,
