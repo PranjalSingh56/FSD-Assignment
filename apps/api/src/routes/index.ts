@@ -74,6 +74,8 @@ router.post(
   requireTaskAccess,
   asyncHandler(comments.createComment),
 );
+router.patch('/comments/:commentId', requireAuth, asyncHandler(comments.updateComment));
+router.delete('/comments/:commentId', requireAuth, asyncHandler(comments.deleteComment));
 router.get('/dashboard', ...protect(dashboard.dashboard));
 router.get('/notifications', ...protect(notifications.listNotifications));
 router.patch('/notifications/:notificationId/read', ...protect(notifications.readNotification));
