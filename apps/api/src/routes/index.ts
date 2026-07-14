@@ -58,7 +58,8 @@ router.post(
   requireProjectAccess,
   asyncHandler(tasks.createTask),
 );
-router.get('/tasks/:taskId', ...protect(tasks.getTask));
+// router.get('/tasks/:taskId', ...protect(tasks.getTask));
+router.get('/tasks/:taskId', requireAuth, requireTaskAccess, asyncHandler(tasks.getTask));
 router.patch('/tasks/:taskId', requireAuth, requireTaskAccess, asyncHandler(tasks.updateTask));
 router.delete('/tasks/:taskId', requireAuth, requireTaskAccess, asyncHandler(tasks.deleteTask));
 router.get(
